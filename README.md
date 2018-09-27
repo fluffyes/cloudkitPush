@@ -68,3 +68,6 @@ See the notification appear on your phone 🎉
 
 
 
+## Notes
+
+After your app went live in App Store, you will need to go to the Production > Data in CloudKit Dashboard to create the Notification. And this notification will go to all the app users (who have allowed push notification)
