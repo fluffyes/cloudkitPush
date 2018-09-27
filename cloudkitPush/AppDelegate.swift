@@ -7,15 +7,34 @@
 //
 
 import UIKit
+import CloudKit
+import UserNotifications
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
-
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        
+        // let AppDelegate handle push notification
+        UNUserNotificationCenter.current().delegate = self
+        
+        // Ask user permission for sending push notification
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound], completionHandler: { authorized, error in
+            if authorized {
+                DispatchQueue.main.async(execute: {
+                    application.registerForRemoteNotifications()
+                })
+            }
+        })
+        
+        // When the app launch after user tap on notification (originally was not running / not in background)
+        if(launchOptions?[UIApplicationLaunchOptionsKey.remoteNotification] != nil){
+            
+        }
+        
         return true
     }
 
@@ -40,7 +59,66 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func applicationWillTerminate(_ application: UIApplication) {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
     }
+    
+    // When user allowed push notification and the app has gotten the device token
+    // (device token is a unique ID that Apple server use to determine which device to send push notification to)
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        
+        // Create a subscription to the 'Notifications' Record Type in CloudKit
+        // User will receive a notification when a new record is created in CloudKit
+        let subscription = CKQuerySubscription(recordType: "Notifications", predicate: NSPredicate(format: "TRUEPREDICATE"), options: .firesOnRecordCreation)
+        
+        // Here we customize the notification message
+        let info = CKNotificationInfo()
+        
+        info.titleLocalizationKey = "%1$@"
+        info.titleLocalizationArgs = ["title"]
+        info.alertLocalizationKey = "%1$@"
+        info.alertLocalizationArgs = ["content"]
+        info.shouldBadge = true
+        info.soundName = "default"
+        subscription.notificationInfo = info
+        
+        // Save the subscription to Public Database in Cloudkit
+        CKContainer.default().publicCloudDatabase.save(subscription, completionHandler: { subscription, error in
+            if error == nil {
+                // Subscription saved successfully
+            } else {
+                // Error occurred
+            }
+        })
+    }
 
 
+}
+
+extension AppDelegate: UNUserNotificationCenterDelegate{
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        
+        let application = UIApplication.shared
+        
+        if(application.applicationState == .active){
+            print("app received notification while in foreground")
+        }
+        
+        // show the notification alert (banner), and with sound
+        completionHandler([.alert, .sound])
+    }
+    
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        let application = UIApplication.shared
+        
+        if(application.applicationState == .active){
+            print("user tapped the notification bar when the app is in foreground")
+        }
+        
+        if(application.applicationState == .inactive)
+        {
+            print("user tapped the notification bar when the app is in background")
+        }
+        
+        // tell the app that we have finished processing the user’s action / response
+        completionHandler()
+    }
 }
 
