@@ -68,10 +68,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // User will receive a push notification when a new record is created in CloudKit
         // Read more on https://developer.apple.com/library/archive/documentation/DataManagement/Conceptual/CloudKitQuickStart/SubscribingtoRecordChanges/SubscribingtoRecordChanges.html
         
-        // The predicate lets you define condition of the subscription, eg: only be notified of change if the newly created notification start with "A"
+//         The predicate lets you define condition of the subscription, eg: only be notified of change if the newly created notification start with "A"
         // the TRUEPREDICATE means any new Notifications record created will be notified
         let subscription = CKQuerySubscription(recordType: "Notifications", predicate: NSPredicate(format: "TRUEPREDICATE"), options: .firesOnRecordCreation)
-        
+    
         // Here we customize the notification message
         let info = CKNotificationInfo()
         
@@ -83,7 +83,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // info.titleLocalizationKey = "%1$@ %2$@" // if want to add more, the format will be "%3$@" and so on
         // info.titleLocalizationArgs = ["title", "subtitle"]
         
-        // this will use the 'content' field in the Record type 'notifications' as the title of the push notification
+        // this will use the 'content' field in the Record type 'notifications' as the content of the push notification
         info.alertLocalizationKey = "%1$@"
         info.alertLocalizationArgs = ["content"]
         
@@ -103,6 +103,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 // Error occurred
             }
         })
+        
     }
 
 
